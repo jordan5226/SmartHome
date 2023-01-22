@@ -1,0 +1,29 @@
+#######################################
+# Syntax Coloring Map For Timer Library
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+WifiCtrl        KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+Close           KEYWORD2
+Connect         KEYWORD2
+ConnectToAP     KEYWORD2
+InitWifiModule  KEYWORD2
+Recv            KEYWORD2
+SendData        KEYWORD2
+ValidString     KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################

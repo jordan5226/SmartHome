@@ -1,0 +1,20 @@
+AT+CWMODE=1                              // 模式設定成 1:Station模式
+
+AT+CWLAP                                 // 顯示可連線的Wifi網路清單。
+AT+CWJAP="D-Link_DIR-809","12345678"     // 連線到已存在的無線網路。
+
+AT+CIPMUX=1                              // 允許一對多的多重連線。
+
+AT+CIPSTART=0,"TCP","192.168.1.134",8087 // 讓 ESP8266扮演客戶端，對伺服器進行連線
+
+AT+CIPSEND=<id>,<length>                 // 傳送訊息
+接著發送消息字串
+
+AT+CIPCLOSE=0                            // 中斷指定的連線。適用於 CIPMUX=1 的情況
+
+AT+CIPSTATUS				// 查看連線會話狀態
+
+// 故障排除
+如遇到console中不斷顯示ESP8266的開機訊息
+關閉ESP8266電源重啟
+Arduino重啟
