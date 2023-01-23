@@ -4,15 +4,15 @@
 #define RECV_MAX_LEN         512
 #define BAUDRATE             9600
 #define WIFI_SERIAL          Serial1
-#define WIFI_SSID            "D-Link_DIR-809"
+#define WIFI_SSID            "HITRON-86E0"
 #define WIFI_PASSWORD        "12345678"
 #define SERVER_IP            "192.168.1.134"
-#define SERVER_PORT          8087
+#define SERVER_PORT          1000
 
-int n=0;
-long				g_lLastConnTime = 0; 
-String				g_strRecv       = "";     // a string to hold incoming data
-WifiCtrl			g_Wifi( WIFI_SERIAL, WIFI_SSID, WIFI_PASSWORD, SERVER_IP, SERVER_PORT);
+int               n=0;
+long				      g_lLastConnTime = 0; 
+String				    g_strRecv       = "";     // a string to hold incoming data
+WifiCtrl			    g_Wifi( WIFI_SERIAL, WIFI_SSID, WIFI_PASSWORD, SERVER_IP, SERVER_PORT);
 SevenSegmentCtrl	g_7SegCtrl;
 
 void setup()
@@ -28,8 +28,10 @@ void setup()
   g_Wifi.SetHttpResponseMap( "/", 200, HttpRespondHomeUrl );
   g_Wifi.SetHttpResponseMap( "/favicon.ico", 404, NULL );
   g_Wifi.SetHttpResponseMap( "", 200, HttpRespondInvalidUrl ); // url為空，代表自定義的錯誤訊息
+  g_Wifi.SetHttpResponseMap( "/wifilist", 200, HttpRespondWifiList );
   
   // Initial wifi
+  delay(2000);
   if( g_Wifi.InitWifiModule() )
     Serial.println("Init Wifi Success!");
   else
@@ -69,10 +71,10 @@ void loop()
   {
     Serial.print( g_strRecv );   // 將WIFI模組傳來的數據由Serial輸出 (顯示WIFI模組返回內容)
 	
-	if( !g_Wifi.HandleHttpRequest( g_strRecv ) ) // 根據獲取的網路數據處理HTTP請求
-	{ // 若不為HTTP請求
-      // 處理硬體控制命令
-	}
+  	if( !g_Wifi.HandleHttpRequest( g_strRecv ) ) // 根據獲取的網路數據處理HTTP請求
+  	{ // 若不為HTTP請求
+        // 處理硬體控制命令
+  	}
   }
   
   
@@ -133,5 +135,14 @@ String HttpRespondHomeUrl()
   strContent += "</body>\r\n";
   strContent += "</html>\r\n";
 
+  return strContent;
+}
+
+String HttpRespondWifiList()
+{
+  String strContent = "";
+
+  g_Wifi.GetWifiAPList( strContent );
+  
   return strContent;
 }

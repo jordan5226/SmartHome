@@ -1,6 +1,6 @@
 /************************************************************************
- * Title:			Wifi Module Controller For ESP8266(firmware version 0.9.2.2)
- * Author:			Jordan Yeh
+ * Title:			      Wifi Module Controller For ESP8266(firmware version 0.9.2.2)
+ * Author:          Jordan Yeh
  * Date(YY/MM/DD):	2016/11/13
  ************************************************************************/
 // For Arduino 1.0 and earlier
@@ -58,49 +58,55 @@ bool WifiCtrl::InitWifiModule()
 			bCmdHasSent     = false;
 			m_strRecv         = "";   
 		}
+    
 		// 若Wifi模組有傳來消息，則持續接收
 		while( m_hwSerial.available() )
 		{
-			char chIn = (char)m_hwSerial.read();                    // 接收WIFI模組返回的消息
+			char chIn = (char)m_hwSerial.read();  // 接收WIFI模組返回的消息
+
 			m_strRecv += chIn;
-			if (chIn == '\n')                                       // 若讀取到換行符
-			{
+      
+			if (chIn == '\n')
+			{ // 若讀取到換行符
 #ifdef _DEBUG_
-				Serial.print( m_strRecv );                          // 將所讀取的消息字串由Serial輸出
+				Serial.print( m_strRecv );  // 將所讀取的消息字串由Serial輸出
 #endif
-				m_strRecv.replace("\r\n", "");                      // 對字串消除所有\r\n字元
+				m_strRecv.replace("\r\n", "");  // 對字串消除所有\r\n字元
+        
 				if( (m_strRecv == "Link") || (m_strRecv == "Linked") )
 				{	// 若返回消息內容為 Link 或 Linked
-					m_bInitWifi = true;                             // 設置狀態:初始化WIFI模組成功
+					m_bInitWifi = true; // 設置狀態:初始化WIFI模組成功
 					return true;
 				}
 				else if( (m_strRecv == "OK") || (m_strRecv == "no change") || (m_strRecv == "link is builded") )
 				{	// 若返回消息內容為 OK 或 no change 或 已經處於多重連線型態
-					if( m_sStatusInitWifi != WIFI_CMD_CONTOSERVER ) // 若當前初始化階段不為"與伺服器連線"
-					{
-						bCmdHasSent = false;                        // 設置命令未發送
-						++m_sStatusInitWifi;                        // 進入下一個初始化階段
+					if( m_sStatusInitWifi != WIFI_CMD_CONTOSERVER ) 
+					{ // 若當前初始化階段不為"與伺服器連線"
+						bCmdHasSent = false;  // 設置命令未發送
+						++m_sStatusInitWifi;  // 進入下一個初始化階段
 					}
 				}
 				else if( m_strRecv == "ALREAY CONNECT")
 				{	// 若返回消息內容為 ALREAY CONNECT
 					this->Close( m_iSessionID_Server );
 					delay(100);
-					bCmdHasSent = false;                            // 設置命令未發送
+					bCmdHasSent = false;  // 設置命令未發送
 				}
 				else if( (m_strRecv == "ERROR") )
 				{	// 若返回消息內容為 ERROR
-					bCmdHasSent = false;                            // 設置命令未發送
+					bCmdHasSent = false;  // 設置命令未發送
 				}
-				m_strRecv = "";                                     // 清空接收字串
+        
+				m_strRecv = ""; // 清空接收字串
 			}
 		}
+
 		// 若命令未發送，則可發送命令；命令已發送，則不進入state machine，等待Wifi模組回應
 		if( !bCmdHasSent )
 		{	// 根據初始化階段發送不同的命令
 			switch( m_sStatusInitWifi )
 			{
-			case WIFI_CMD_SETMODE:                  // 模式設定成 3:Station+AP混合模式
+			case WIFI_CMD_SETMODE:      // 模式設定成 3:Station+AP混合模式
 				m_hwSerial.write("AT+CWMODE=3\r\n");
 				m_nMode = 3;
 #ifdef _DEBUG_
@@ -109,10 +115,10 @@ bool WifiCtrl::InitWifiModule()
 				strPrint.concat( ":Set mode to \"Station+AP\"" );
 				Serial.println( strPrint );
 #endif
-				bCmdHasSent = true;                 // 設置命令已發送
+				bCmdHasSent = true; // 設置命令已發送
 				break;
 				
-			case WIFI_CMD_MULTICON:                 // 允許一對多的多重連線
+			case WIFI_CMD_MULTICON:     // 允許一對多的多重連線
 				m_hwSerial.write("AT+CIPMUX=1\r\n");
 #ifdef _DEBUG_
 				strPrint = "Step ";
@@ -120,10 +126,10 @@ bool WifiCtrl::InitWifiModule()
 				strPrint.concat( ":Set as allow one to multi connectin" );
 				Serial.println( strPrint );
 #endif
-				bCmdHasSent = true;                 // 設置命令已發送
+				bCmdHasSent = true; // 設置命令已發送
 				break;
 				
-			case WIFI_CMD_ONSERVER:                 // 啟動服務器監聽Port
+			case WIFI_CMD_ONSERVER:     // 啟動服務器監聽Port
 				if( !this->CreateServer(80) )
 					return false;
 #ifdef _DEBUG_
@@ -132,10 +138,10 @@ bool WifiCtrl::InitWifiModule()
 				strPrint.concat( ":Start listen port on 80" );
 				Serial.println( strPrint );
 #endif
-				bCmdHasSent = true;                 // 設置命令已發送
+				bCmdHasSent = true; // 設置命令已發送
 				break;
 				
-			case WIFI_CMD_CONTOAP:                  // 連線到已存在的無線網路
+			case WIFI_CMD_CONTOAP:      // 連線到已存在的無線網路
 				if( !this->ConnectToAP() )
 					return false;
 #ifdef _DEBUG_
@@ -144,10 +150,10 @@ bool WifiCtrl::InitWifiModule()
 				strPrint.concat( ":Connect to Wifi AP" );
 				Serial.println( strPrint );
 #endif
-				bCmdHasSent = true;                 // 設置命令已發送
+				bCmdHasSent = true; // 設置命令已發送
 				break;
 				
-			case WIFI_CMD_CONTOSERVER:              // 讓 ESP8266扮演客戶端，對伺服器進行連線
+			case WIFI_CMD_CONTOSERVER:  // 讓 ESP8266扮演客戶端，對伺服器進行連線
 				if( !this->InitConnection( m_strServer_IP, m_iServer_Port ) )
 					return false;
 #ifdef _DEBUG_
@@ -156,7 +162,7 @@ bool WifiCtrl::InitWifiModule()
 				strPrint.concat( ":Connect to server" );
 				Serial.println( strPrint );
 #endif
-				bCmdHasSent = true;                 // 設置命令已發送
+				bCmdHasSent = true; // 設置命令已發送
 				break;
 				
 			default:
@@ -166,8 +172,9 @@ bool WifiCtrl::InitWifiModule()
 				return false;
 			}
 			
-			if( bCmdHasSent )                       // 若設置命令已發送
-				lLastChkTime = millis();            // 則啟動逾時計時
+			if( bCmdHasSent ) // 若設置命令已發送
+				lLastChkTime = millis();  // 則啟動逾時計時
+
 			delay(100);
 		}
 	}
@@ -311,14 +318,14 @@ bool WifiCtrl::Close(int iSession)
 #ifdef _DEBUG_
 	Serial.print( strATCmd );
 #endif
-	m_hwSerial.print( strATCmd );              // 關閉連線
+	m_hwSerial.print( strATCmd ); // 關閉連線
 	delay(100);
 	char strFindOK[] = "OK";
-	if( m_hwSerial.find( strFindOK ) )         // 從WIFI模組返回的消息中查找字串
+	if( m_hwSerial.find( strFindOK ) )        // 從WIFI模組返回的消息中查找字串
 	{
 		delay(100);
 		char strFindUnlink[] = "Unlink";
-		if( m_hwSerial.find( strFindUnlink ) ) // 從WIFI模組返回的消息中查找字串
+		if( m_hwSerial.find( strFindUnlink ) )  // 從WIFI模組返回的消息中查找字串
 		{
 #ifdef _DEBUG_
 			String str = "[Close] Close Session ";
@@ -360,11 +367,11 @@ bool WifiCtrl::Connect(String strIP, int iPort, String strType)
 	m_hwSerial.print( strATCmd );
 	delay(100);
 	char strFindOK[] = "OK";
-	if( m_hwSerial.find( strFindOK ) )       // 從WIFI模組返回的消息中查找字串
+	if( m_hwSerial.find( strFindOK ) )      // 從WIFI模組返回的消息中查找字串
 	{
 		delay(100);
 		char strFindLink[] = "Link";
-		if( m_hwSerial.find( strFindLink ) ) // 從WIFI模組返回的消息中查找字串
+		if( m_hwSerial.find( strFindLink ) )  // 從WIFI模組返回的消息中查找字串
 		{
 #ifdef _DEBUG_
 			Serial.println( "[Connect to server] Linked" );
@@ -554,19 +561,19 @@ bool WifiCtrl::SendHttpResponse(int iSession, int iResponseIdx)
 			return false;
 	
 		String strContent = m_pResponseMap[ iResponseIdx ].m_pResponse(); // 以Callback函數取得HTTP回應內容
-		
+
 		strResponse.concat( 
 			"Content-Type: text/html" + m_strCrLn + 
 			"Content-Length: " + strContent.length() + m_strCrLn + 
 			"Connection: close" + m_strCrLn + 
 			m_strCrLn + 
-			strContent + m_strCrLn ); // 注意最後要多加一個CRLF
+		  strContent + m_strCrLn ); // 注意最後要多加一個CRLF
 	}
 	else if( 404 == m_pResponseMap[ iResponseIdx ].m_iStatusCode )
 	{
 		strResponse.concat( "404 " + m_strCrLn + m_strCrLn );
 	}
-	
+
 	this->SendData( strResponse, iSession );
 	
 	return true;
@@ -592,65 +599,162 @@ bool WifiCtrl::SetHttpResponseMap( String strUrl, int iStatusCode, ResponseCallb
 		delete[] this->m_pResponseMap;
 	}
 	this->m_pResponseMap = pNewMap;
-	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_strUrl       = strUrl;
-	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_iStatusCode  = iStatusCode;
-	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_pResponse    = pCallback;
+	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_strUrl      = strUrl;
+	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_iStatusCode = iStatusCode;
+	this->m_pResponseMap[ m_nResponseMapCnt-1 ].m_pResponse   = pCallback;
 }
 
 /************************************************************************
  * 函數名稱: GetWifiAPList
  * 用途描述: 獲得可連線的Wifi AP列表
  * 參數說明: 
- *           (1)String& pWifiList: 儲存接收到的Wifi AP列表
+ *           (1)String& strWifiList: 儲存接收到的Wifi AP列表
  ************************************************************************/
-bool WifiCtrl::GetWifiAPList( String& pWifiList )
+bool WifiCtrl::GetWifiAPList( String& strWifiList )
 {
 	bool   bMode      = true;
+  bool   bHtmlHead  = false;  // Has generated HTML head and body tags
+  char   cEnc       = 0;
 	int    iEnc       = 0;
-	int    iRssi      = 0;
+  int    iRSSI      = 0;
 	int    iHeadIdx   = -1;
 	int    iTailIdx   = -1;
 	int    iQuote1Idx = -1;
 	int    iQuote2Idx = -1;
 	String strSSID    = "";
+  String strMAC     = "";
+  String strChannel = "";
 	String strATCmd   = "AT+CWLAP\r\n";
 	String strTmpLine = "";
+  String arrEnc[]   = { "OPEN", "WEP", "WPA-PSK(TKIP)", "WPA2-PSK(AES)", "WPA-WPA2-PSK", "WPA2_Enterprise(Not support)" }; 
 	
 	m_hwSerial.print( strATCmd );              // 發送獲取Wifi AP列表命令
 #ifdef _DEBUG_
-	Serial.println( "[GetWifiAPList] send cmd" );
+	Serial.println( "[GetWifiAPList] Send Command: AT+CWLAP" );
 #endif
 	
+  strATCmd = "";
+
 	if( this->Recv( strATCmd, TIMEOUT_LONG ) ) // 接收WIFI模組返回的數據
 	{
+#ifdef _DEBUG_
+	  Serial.println( strATCmd );
+#endif
+
 		// 處理接收到的字串
 		while( true )
 		{
 			iHeadIdx   = strATCmd.indexOf( "+CWLAP:(", ( iTailIdx + 1 ) );
 			iTailIdx   = strATCmd.indexOf( ")", ( iTailIdx + 1 ) );
+      
 			if( iHeadIdx < 0 || iTailIdx < 0 )
 				break;
 			
 			// 取得單筆WIFI AP數據
 			strTmpLine = strATCmd.substring( ( iHeadIdx + 8 ), iTailIdx );
-			// 獲取加密方式
-			iEnc       = strTmpLine.charAt( 0 ).toInt();
+
+			// [1] 獲取加密方式
+      cEnc = strTmpLine.charAt( 0 );
+			iEnc = ::atoi( &cEnc );
+      if( iEnc < 0 || iEnc > 5 )
+        iEnc = 0;
+      
 			// 搜尋SSID之前後雙引號索引
 			iQuote1Idx = strTmpLine.indexOf( "\"", 2 );
 			iQuote2Idx = strTmpLine.indexOf( "\"", 3 );
-			// 獲取SSID
+			// [2] 獲取SSID
 			strSSID    = strTmpLine.substring( ( iQuote1Idx + 1 ), iQuote2Idx );
-			// 搜尋後逗號索引
+      
+			// 搜尋訊號強度之逗號索引
 			iQuote1Idx = iQuote2Idx; // 用iQuote1Idx暫存後引號之索引
 			iQuote2Idx = strTmpLine.indexOf( ",", ( iQuote1Idx + 2 ) ); // 取得後逗號索引
-			// 獲取訊號強度
-			iRssi      = strTmpLine.substring( ( iQuote1Idx + 2 ), iQuote2Idx ).toInt();
-			//
+			// [3] 獲取訊號強度
+			iRSSI      = strTmpLine.substring( ( iQuote1Idx + 2 ), iQuote2Idx ).toInt();
+      
+      // 搜尋MAC地址之前後雙引號索引
+			iQuote1Idx = strTmpLine.indexOf( "\"", ( iQuote2Idx + 1 ) );
+			iQuote2Idx = strTmpLine.indexOf( "\"", ( iQuote1Idx + 1 ) );
+			// [4] 獲取MAC地址
+      strMAC     = strTmpLine.substring( ( iQuote1Idx + 1 ), iQuote2Idx );
+
+      // 搜尋頻道之逗號索引
+      iQuote1Idx = iQuote2Idx; // 用iQuote1Idx暫存後引號之索引
+      iQuote2Idx = strTmpLine.length();
+      // [5] 獲取頻道
+      strChannel = strTmpLine.substring( ( iQuote1Idx + 2 ), iQuote2Idx );
+
+      // 將資訊寫入Wifi AP列表
+      if( !bHtmlHead )
+      {
+        strWifiList += "<!DOCTYPE HTML>";
+        strWifiList += "<html>";
+        strWifiList += "<head>";
+        strWifiList += "<meta charset=\"utf-8\" />\r\n";
+        strWifiList += "<meta name=\"viewport\" content=\"width=device-width, user-scalable=yes, initial-scale=1\">\r\n";
+        strWifiList += "<title>Smart Home Sensor Network Configuration</title>\r\n";
+        strWifiList += "<style type=\"text/css\"> td{width: 176.812px; text-align: center;} table{border-collapse: collapse; width: 100%; border: 1;}</style>\r\n";
+        strWifiList += "</head>";
+        strWifiList += "<body>";
+        /*
+        strWifiList += "<table>";
+        strWifiList += "<tbody>";
+        strWifiList += "<tr>";
+        strWifiList += "<td>Encryption</td>";
+        strWifiList += "<td>SSID</td>";
+        strWifiList += "<td>Signal RSSI</td>";
+        strWifiList += "<td>MAC Address</td>";
+        strWifiList += "<td>Channel</td>";
+        strWifiList += "</tr>\r\n";
+        */
+
+        bHtmlHead = true;
+      }
+      /*
+      strWifiList += "<tr>";
+      strWifiList += "<td>" + arrEnc[ iEnc ] + "</td>";
+      strWifiList += "<td>" + strSSID +"</td>";
+      if( iRSSI > -50 )
+        strWifiList += "<td>|||||</td>";
+      else if( iRSSI > -60 )
+        strWifiList += "<td>||||</td>";
+      else if( iRSSI > -70 )
+        strWifiList += "<td>|||</td>";
+      else if( iRSSI > -80 )
+        strWifiList += "<td>||</td>";
+      else
+        strWifiList += "<td>|</td>";
+      strWifiList += "<td>" + strMAC + "</td>";
+      strWifiList += "<td>" + strChannel + "</td>";
+      strWifiList += "</tr>\r\n";
+      */
+
+      if( iRSSI > -50 )
+        strWifiList += "|||||";
+      else if( iRSSI > -60 )
+        strWifiList += "||||&nbsp;";
+      else if( iRSSI > -70 )
+        strWifiList += "|||&nbsp;&nbsp;";
+      else if( iRSSI > -80 )
+        strWifiList += "||&nbsp;&nbsp;&nbsp;";
+      else
+        strWifiList += "|&nbsp;&nbsp;&nbsp;&nbsp;";
+      strWifiList += ", ";
+      strWifiList += strSSID;
+      strWifiList += "<br />";
 		}
-		
+
+    if( bHtmlHead )
+    {
+      /*
+      strWifiList += "</tbody>";
+      strWifiList += "</table>";
+      */
+      strWifiList += "</body>";
+      strWifiList += "</html>\r\n";      
+    }
+
 		return true;
 	}
-	
-	
+
 	return false; // 接收失敗
 }
